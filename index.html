@@ -260,9 +260,14 @@ function makeSpawn(){
 }
 
 /* ---------------- audio (tiny synth, no assets) ---------------- */
-let AC = null;
+let AC = null, master = null;
 function ac(){
-  if(!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+  if(!AC){
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain();
+    master.gain.value = 1.5;                 // phone speakers need the help
+    master.connect(AC.destination);
+  }
   if(AC.state === 'suspended') AC.resume();
   return AC;
 }
@@ -273,22 +278,22 @@ function tone(f, dur, type, vol, when){
     const o = a.createOscillator(), g = a.createGain();
     o.type = type || 'sine';
     o.frequency.setValueAtTime(f, t);
-    g.gain.setValueAtTime(vol || 0.14, t);
+    g.gain.setValueAtTime(vol || 0.2, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(a.destination);
+    o.connect(g).connect(master);
     o.start(t); o.stop(t + dur + 0.03);
   }catch(e){}
 }
-const sDrop  = () => tone(170, 0.06, 'square', 0.07);
-const sBad   = () => tone(110, 0.14, 'sawtooth', 0.1);
-const sCrush = () => tone(90, 0.1, 'sawtooth', 0.08);
+const sDrop  = () => tone(420, 0.08, 'square', 0.12);
+const sBad   = () => tone(140, 0.14, 'sawtooth', 0.16);
+const sCrush = () => tone(120, 0.1, 'sawtooth', 0.14);
 function sMerge(v, casc){
-  const f = 220 + Math.log2(v) * 45 + casc * 70;
-  tone(f, 0.12, 'triangle', 0.16);
-  tone(f * 1.5, 0.1, 'sine', 0.07, 0.04);
+  const f = 280 + Math.log2(v) * 50 + casc * 80;
+  tone(f, 0.12, 'triangle', 0.24);
+  tone(f * 1.5, 0.1, 'sine', 0.12, 0.04);
 }
-function sLevel(){ [523, 659, 784].forEach((f, i) => tone(f, 0.16, 'triangle', 0.13, i * 0.09)); }
-function sOver(){ [392, 311, 233, 174].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.09, i * 0.16)); }
+function sLevel(){ [523, 659, 784].forEach((f, i) => tone(f, 0.16, 'triangle', 0.2, i * 0.09)); }
+function sOver(){ [392, 311, 233, 174].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.14, i * 0.16)); }
 
 /* ---------------- geometry ---------------- */
 const cellX = c => c * (S + GAP);
@@ -682,6 +687,7 @@ window.addEventListener('keydown', e => {
     saveStats();
   }
 });
+window.addEventListener('pointerdown', () => { if(sound) ac(); }, { passive: true }); // unlock audio on any first tap
 window.addEventListener('resize', () => { layout(); if(playing) renderQueue(); });
 
 /* ---------------- boot ---------------- */
