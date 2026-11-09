@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Neon Snake — Merge Drop Arcade</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0b0f14">
+<style>
+  :root{ --bg:#0b0f14; --line:#22303e; --text:#e6edf3; --dim:#8b9bab;
+         --accent:#2dd4bf; --accent-ink:#06251f; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; }
+  body{ min-height:100dvh; background:radial-gradient(900px 520px at 50% -8%, #143040, #0b0f14 68%);
+        color:var(--text); font-family:ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+        display:flex; align-items:center; justify-content:center;
+        padding:env(safe-area-inset-top) 20px calc(env(safe-area-inset-bottom) + 28px); }
+  main{ max-width:420px; width:100%; text-align:center; }
+  .top{ display:flex; justify-content:flex-start; margin-bottom:30px; }
+  .back{ color:var(--dim); text-decoration:none; font-size:14px; font-weight:800;
+         letter-spacing:.12em; padding:10px 0; }
+  .back:hover{ color:var(--accent); }
+  .thumb{ width:140px; height:140px; border-radius:30px; background:rgba(255,255,255,.03);
+          border:1px solid rgba(255,255,255,.06); margin:0 auto 22px; position:relative; overflow:hidden; }
+  .thumb svg{ position:absolute; inset:0; width:100%; height:100%;
+              filter:drop-shadow(0 0 8px rgba(74,222,128,.55)); }
+  h1{ font-size:34px; font-weight:900; letter-spacing:.04em; margin:0 0 6px; }
+  .tag{ color:var(--dim); font-size:16px; margin:0 0 26px; }
+  .soon{ background:rgba(255,255,255,.04); border:1px dashed var(--line); border-radius:16px;
+         padding:18px; font-size:15px; color:#c6d2de; margin-bottom:26px; }
+  .btn{ display:inline-block; background:var(--accent); color:var(--accent-ink);
+        font-weight:800; font-size:15px; text-decoration:none; padding:13px 28px;
+        border-radius:999px; box-shadow:0 6px 22px rgba(45,212,191,.3); }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a class="back" href="./">‹ HUB</a></div>
+  <div class="thumb">
+    <svg viewBox="0 0 64 64">
+      <path d="M15 49 V39 Q15 31 23 31 H41 Q49 31 49 23 V15" fill="none" stroke="#4ade80" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="15" cy="49" r="6.5" fill="#86efac"/>
+      <rect x="45" y="45" width="7" height="7" rx="1.5" fill="none" stroke="#f87171" stroke-width="2"/>
+      <rect x="12" y="8" width="7" height="7" rx="1.5" fill="none" stroke="#f87171" stroke-width="2"/>
+    </svg>
+  </div>
+  <h1>NEON SNAKE</h1>
+  <p class="tag">grip it and grow</p>
+  <div class="soon">Arriving soon — this game is still in the lab.<br>Pick another card in the meantime.</div>
+  <a class="btn" href="./">BACK TO THE HUB</a>
+</main>
+</body>
+</html>

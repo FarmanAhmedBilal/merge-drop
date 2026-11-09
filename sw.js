@@ -1,6 +1,10 @@
-/* Merge Drop service worker — cache-first so the game plays offline. */
-const CACHE = 'merge-drop-v1';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+/* Merge Drop arcade service worker — cache-first so everything plays offline. */
+const CACHE = 'merge-drop-v2';
+const ASSETS = [
+  './', './index.html', './merge-drop.html',
+  './neon-snake.html', './quick-draw.html',
+  './manifest.webmanifest', './icon.svg', './privacy.html'
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
