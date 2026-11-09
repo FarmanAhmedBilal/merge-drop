@@ -38,6 +38,10 @@
   .row2{ display:flex; align-items:center; gap:8px; margin-top:8px; }
   .lvl{ font-size:12px; font-weight:800; color:var(--accent); background:rgba(45,212,191,.1);
         border:1px solid rgba(45,212,191,.3); padding:4px 10px; border-radius:99px; white-space:nowrap; }
+  .hubbtn{ font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--dim);
+           background:var(--surface2); border:1px solid var(--line); padding:5px 9px;
+           border-radius:99px; text-decoration:none; white-space:nowrap; }
+  .hubbtn:hover{ color:var(--accent); border-color:#33465a; }
   .bar{ flex:1; height:6px; border-radius:99px; background:var(--surface2); overflow:hidden; }
   .bar i{ display:block; height:100%; width:0%; border-radius:99px;
           background:linear-gradient(90deg, var(--accent), #67e8f9); transition:width .3s ease; }
@@ -159,6 +163,7 @@
       <span class="best" id="best">BEST 0</span>
     </div>
     <div class="row2">
+      <a class="hubbtn" href="./" title="Back to the hub">‹ HUB</a>
       <span class="lvl" id="lvl">LV 1</span>
       <span class="bar"><i id="bar"></i></span>
       <button class="iconbtn" id="recordsBtn" title="Records">🏆</button>
