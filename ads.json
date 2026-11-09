@@ -1,0 +1,17 @@
+{
+  "ads": [],
+  "house": {
+    "hub": {
+      "text": "SPONSOR SLOT OPEN",
+      "sub": "Your brand here — one slim banner on every run.",
+      "url": "",
+      "img": ""
+    },
+    "game": {
+      "text": "PLAYED ONE? PLAY ALL THREE",
+      "sub": "Merge Drop · Neon Snake · Quick Draw",
+      "url": "./",
+      "img": ""
+    }
+  }
+}

@@ -74,7 +74,7 @@
   .glow-r{ filter:drop-shadow(0 0 5px rgba(248,113,113,.55)); }
 
   footer{ display:flex; align-items:center; justify-content:space-between;
-          margin-top:34px; border-top:1px solid var(--line); padding-top:18px; }
+          margin-top:18px; border-top:1px solid var(--line); padding-top:18px; }
   .fright{ display:flex; align-items:center; gap:14px; }
   .vsep{ width:1px; height:20px; background:var(--line); }
   footer a{ color:var(--text); text-decoration:none; font-size:15px; }
@@ -98,6 +98,8 @@
   </div>
 
   <section id="library"></section>
+
+  <div id="adSlot"></div>
 
   <footer>
     <button class="round" id="soundFoot" title="Sound"></button>
@@ -181,5 +183,6 @@ if('serviceWorker' in navigator && window.isSecureContext){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }
 </script>
+<script src="ads.js" data-context="hub"></script>
 </body>
 </html>

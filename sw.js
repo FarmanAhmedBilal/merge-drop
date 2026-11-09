@@ -3,7 +3,8 @@ const CACHE = 'merge-drop-v2';
 const ASSETS = [
   './', './index.html', './merge-drop.html',
   './neon-snake.html', './quick-draw.html',
-  './manifest.webmanifest', './icon.svg', './privacy.html'
+  './manifest.webmanifest', './icon.svg', './privacy.html',
+  './ads.js', './ads.json'
 ];
 
 self.addEventListener('install', (e) => {
