@@ -725,12 +725,27 @@ function resetGame(){
 /* Games register here so the dashboard's totals, recent chips and
    per-game bests stay in sync with each game's own screen. New games
    add one entry pointing at their own storage key. */
+function readD(key){
+  try{ return JSON.parse(localStorage.getItem(key) || '{}'); }
+  catch(e){ return {}; }
+}
+function gameEntry(name, key){
+  return {
+    name: name, key: key,
+    best:  () => readD(key).best  || 0,
+    plays: () => readD(key).games || 0,
+    time:  () => readD(key).time  || 0,
+    last:  () => readD(key).last  || 0
+  };
+}
 const GAMES = [
   { name: 'MERGE DROP', key: 'merge-drop-v1',
     best:  () => best,
     plays: () => totalGames,
     time:  () => totalTime + (sessionStart ? (Date.now() - sessionStart) / 1000 : 0),
-    last:  () => lastPlayed }
+    last:  () => lastPlayed },
+  gameEntry('NEON SNAKE', 'neon-snake-v1'),
+  gameEntry('QUICK DRAW', 'quick-draw-v1')
 ];
 
 function fmtTime(s){

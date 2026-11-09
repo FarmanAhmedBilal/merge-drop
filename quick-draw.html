@@ -2,54 +2,473 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Quick Draw — Merge Drop Arcade</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#0b0f14">
 <style>
-  :root{ --bg:#0b0f14; --line:#22303e; --text:#e6edf3; --dim:#8b9bab;
-         --accent:#2dd4bf; --accent-ink:#06251f; }
+  :root{
+    --bg:#0b0f14; --surface:#121a23; --surface2:#1a2430; --line:#22303e;
+    --text:#e6edf3; --dim:#8b9bab; --accent:#2dd4bf; --accent-ink:#06251f;
+    --warn:#f87171; --gold:#fde047;
+  }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ margin:0; }
-  body{ min-height:100dvh; background:radial-gradient(900px 520px at 50% -8%, #143040, #0b0f14 68%);
-        color:var(--text); font-family:ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
-        display:flex; align-items:center; justify-content:center;
-        padding:env(safe-area-inset-top) 20px calc(env(safe-area-inset-bottom) + 28px); }
-  main{ max-width:420px; width:100%; text-align:center; }
-  .top{ display:flex; justify-content:flex-start; margin-bottom:30px; }
-  .back{ color:var(--dim); text-decoration:none; font-size:14px; font-weight:800;
-         letter-spacing:.12em; padding:10px 0; }
-  .back:hover{ color:var(--accent); }
-  .thumb{ width:140px; height:140px; border-radius:30px; background:rgba(255,255,255,.03);
-          border:1px solid rgba(255,255,255,.06); margin:0 auto 22px; position:relative; overflow:hidden; }
-  .thumb svg{ position:absolute; inset:0; width:100%; height:100%;
-              filter:drop-shadow(0 0 8px rgba(248,113,113,.55)); }
-  h1{ font-size:34px; font-weight:900; letter-spacing:.04em; margin:0 0 6px; }
-  .tag{ color:var(--dim); font-size:16px; margin:0 0 26px; }
-  .soon{ background:rgba(255,255,255,.04); border:1px dashed var(--line); border-radius:16px;
-         padding:18px; font-size:15px; color:#c6d2de; margin-bottom:26px; }
-  .btn{ display:inline-block; background:var(--accent); color:var(--accent-ink);
-        font-weight:800; font-size:15px; text-decoration:none; padding:13px 28px;
-        border-radius:999px; box-shadow:0 6px 22px rgba(45,212,191,.3); }
+  html,body{ height:100%; margin:0; }
+  body{
+    background:radial-gradient(1200px 800px at 50% -10%, #17222e, var(--bg));
+    color:var(--text);
+    font-family:ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
+    display:flex; justify-content:center; overflow:hidden;
+    height:100dvh; touch-action:manipulation; user-select:none; -webkit-user-select:none;
+    padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);
+  }
+  #app{ width:min(96vw, 480px); display:flex; flex-direction:column; }
+
+  header{ margin-top:16px; }
+  .row1{ display:flex; align-items:baseline; justify-content:space-between; }
+  .title{ font-size:13px; font-weight:800; letter-spacing:.24em; color:var(--dim); }
+  .score{ font-size:34px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1;
+          text-shadow:0 2px 14px rgba(248,113,113,.25); }
+  .best{ font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .row2{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .hubbtn{ font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--dim);
+           background:var(--surface2); border:1px solid var(--line); padding:5px 9px;
+           border-radius:99px; text-decoration:none; white-space:nowrap; }
+  .hubbtn:hover{ color:var(--accent); border-color:#33465a; }
+  .bar{ flex:1; height:6px; border-radius:99px; background:var(--surface2); overflow:hidden; }
+  .bar i{ display:block; height:100%; width:100%; border-radius:99px;
+          background:linear-gradient(90deg, var(--gold), var(--warn)); transition:width .15s linear; }
+  .bar i.low{ background:var(--warn); }
+  .round{ width:32px; height:26px; border-radius:8px; background:var(--surface2);
+          border:1px solid var(--line); color:var(--dim); cursor:pointer;
+          display:flex; align-items:center; justify-content:center; }
+  .round:hover{ color:var(--text); border-color:#33465a; }
+  .round svg{ display:block; }
+
+  #stage{ flex:1; position:relative; margin:10px 0; min-height:240px; }
+  #stage.shake{ animation:shake .2s linear; }
+  @keyframes shake{
+    0%,100%{ transform:translate(0,0); } 25%{ transform:translate(4px,-2px); }
+    50%{ transform:translate(-4px,2px); } 75%{ transform:translate(2px,2px); }
+  }
+  #boardWrap{ position:absolute; inset:0; border-radius:16px; overflow:hidden;
+              background:rgba(255,255,255,.03); border:1px solid var(--line);
+              background-image:linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+                               linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+              background-size:36px 36px;
+              box-shadow:0 18px 50px rgba(0,0,0,.5); cursor:crosshair; }
+  #fx{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:5; }
+  #flash{ position:absolute; inset:0; background:rgba(248,113,113,.16); opacity:0;
+          pointer-events:none; z-index:4; }
+  #flash.on{ animation:flashA .3s ease-out; }
+  @keyframes flashA{ 0%{ opacity:0; } 30%{ opacity:1; } 100%{ opacity:0; } }
+
+  #target{ position:absolute; z-index:2; transform:translate(-50%,-50%);
+           display:none; pointer-events:none; }
+  #target svg{ width:100%; height:100%; display:block; filter:drop-shadow(0 0 10px rgba(248,113,113,.5)); }
+  #target svg.pop{ animation:popIn .22s cubic-bezier(.2,.7,.3,1); }
+  @keyframes popIn{ 0%{ transform:scale(.3); } 70%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
+  #ring{ position:absolute; inset:-14px; border:3px solid rgba(248,113,113,.85);
+         border-radius:50%; transform:scale(1);
+         box-shadow:0 0 14px rgba(248,113,113,.35); }
+
+  #streak{ position:absolute; left:0; right:0; top:12px; text-align:center; z-index:6;
+           pointer-events:none; font-weight:900; color:var(--gold); font-size:22px;
+           letter-spacing:.05em; opacity:0; text-shadow:0 2px 14px rgba(253,224,71,.5); }
+  #streak.show{ animation:comboA .6s ease-out; }
+  @keyframes comboA{ 0%{ opacity:0; transform:scale(.5); } 25%{ opacity:1; transform:scale(1.15); }
+                     70%{ opacity:1; transform:scale(1); } 100%{ opacity:0; transform:scale(1); } }
+
+  .fly{ position:absolute; z-index:7; font-weight:800; color:#fff; pointer-events:none;
+        text-shadow:0 2px 8px rgba(0,0,0,.7); animation:rise .8s ease-out forwards; }
+  @keyframes rise{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(-44px); } }
+  .hitRing{ position:absolute; z-index:6; width:26px; height:26px; border-radius:50%;
+            border:3px solid var(--gold); pointer-events:none; transform:translate(-50%,-50%);
+            animation:ringPop .45s ease-out forwards; }
+  @keyframes ringPop{ 0%{ opacity:1; transform:translate(-50%,-50%) scale(.4); }
+                      100%{ opacity:0; transform:translate(-50%,-50%) scale(2.4); } }
+
+  footer{ font-size:11px; color:var(--dim); text-align:center; padding:8px 0 6px; }
+
+  .overlay{ position:fixed; inset:0; background:rgba(5,8,12,.8); backdrop-filter:blur(6px);
+            display:flex; align-items:center; justify-content:center; z-index:20; opacity:0;
+            pointer-events:none; transition:opacity .3s; }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+  .card{ width:min(88vw, 340px); background:var(--surface); border:1px solid var(--line);
+         border-radius:18px; padding:26px 24px; text-align:center;
+         box-shadow:0 30px 80px rgba(0,0,0,.6); transform:translateY(10px); transition:transform .3s; }
+  .overlay.open .card{ transform:translateY(0); }
+  .card h1{ margin:0 0 4px; font-size:30px; font-weight:900; letter-spacing:.14em; color:var(--warn); }
+  .card h2{ margin:0 0 14px; font-size:22px; font-weight:900; letter-spacing:.1em; }
+  .card p.sub{ margin:0 0 18px; font-size:13px; color:var(--dim); }
+  .rules{ text-align:left; margin:0 0 20px; padding:0; list-style:none; font-size:13.5px; line-height:1.5; }
+  .rules li{ display:flex; gap:10px; margin-bottom:10px; color:#c6d2de; }
+  .rules .chip{ flex:0 0 auto; width:22px; height:22px; border-radius:7px; font-weight:800;
+                font-size:11px; display:flex; align-items:center; justify-content:center; color:#08131b; }
+  .btn{ font-family:inherit; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer;
+        background:var(--surface2); color:var(--text); border:1px solid var(--line);
+        padding:12px 18px; border-radius:12px; text-decoration:none; display:inline-block;
+        transition:transform .1s, box-shadow .2s; }
+  .btn:hover{ transform:translateY(-1px); border-color:#3a4f66; }
+  .btn.primary{ background:var(--warn); color:#210a0a; border-color:transparent;
+                box-shadow:0 6px 22px rgba(248,113,113,.35); }
+  .stats{ display:flex; gap:8px; margin:0 0 20px; }
+  .stat{ flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:10px 4px; }
+  .stat b{ display:block; font-size:19px; font-variant-numeric:tabular-nums; }
+  .stat span{ font-size:10px; letter-spacing:.12em; color:var(--dim); }
+  #newBest{ display:none; margin:-8px 0 16px; font-size:12px; font-weight:800; color:var(--gold);
+            letter-spacing:.14em; }
 </style>
 </head>
 <body>
-<main>
-  <div class="top"><a class="back" href="./">‹ HUB</a></div>
-  <div class="thumb">
-    <svg viewBox="0 0 64 64">
-      <circle cx="32" cy="32" r="15" fill="none" stroke="#f87171" stroke-width="3.5"/>
-      <line x1="32" y1="6" x2="32" y2="18" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
-      <line x1="32" y1="46" x2="32" y2="58" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
-      <line x1="6" y1="32" x2="18" y2="32" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
-      <line x1="46" y1="32" x2="58" y2="32" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="32" cy="32" r="5" fill="#f87171"/>
-    </svg>
+<div id="app">
+  <header>
+    <div class="row1">
+      <span class="title">QUICK DRAW</span>
+      <span class="score" id="score">0</span>
+      <span class="best" id="bestEl">BEST 0</span>
+    </div>
+    <div class="row2">
+      <a class="hubbtn" href="./" title="Back to the hub">‹ HUB</a>
+      <span class="bar"><i id="timeBar"></i></span>
+      <button class="round" id="soundBtn" title="Sound"></button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <div id="boardWrap">
+      <div id="target">
+        <svg viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="15" fill="none" stroke="#f87171" stroke-width="3.5"/>
+          <line x1="32" y1="6" x2="32" y2="18" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="32" y1="46" x2="32" y2="58" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="6" y1="32" x2="18" y2="32" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="46" y1="32" x2="58" y2="32" stroke="#f87171" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="32" cy="32" r="5" fill="#f87171"/>
+        </svg>
+        <div id="ring"></div>
+      </div>
+      <div id="streak"></div>
+      <canvas id="fx"></canvas>
+      <div id="flash"></div>
+    </div>
   </div>
-  <h1>QUICK DRAW</h1>
-  <p class="tag">reflex under fire</p>
-  <div class="soon">Arriving soon — this game is still in the lab.<br>Pick another card in the meantime.</div>
-  <a class="btn" href="./">BACK TO THE HUB</a>
-</main>
+
+  <footer>Tap the crosshair before the ring collapses · misses drain time</footer>
+</div>
+
+<div class="overlay open" id="start">
+  <div class="card">
+    <h1>QUICK DRAW</h1>
+    <p class="sub">A reflex duel against a shrinking ring.</p>
+    <ul class="rules">
+      <li><span class="chip" style="background:#f87171">◎</span> Tap the crosshair before the timer ring collapses.</li>
+      <li><span class="chip" style="background:#fde047">+</span> Every hit adds time and grows your streak multiplier.</li>
+      <li><span class="chip" style="background:#39424e; color:#9aa7b4">−</span> A miss drains time — and every hit makes the next one faster.</li>
+    </ul>
+    <button class="btn primary" id="playBtn">DRAW</button>
+  </div>
+</div>
+
+<div class="overlay" id="over">
+  <div class="card">
+    <h2>TIME'S UP</h2>
+    <p id="newBest">★ NEW BEST ★</p>
+    <div class="stats">
+      <div class="stat"><b id="sScore">0</b><span>SCORE</span></div>
+      <div class="stat"><b id="sBest">0</b><span>BEST</span></div>
+      <div class="stat"><b id="sStreak">0</b><span>TOP STREAK</span></div>
+    </div>
+    <button class="btn primary" id="againBtn">ONE MORE DRAW</button>
+    <p style="margin:14px 0 0"><a class="btn" href="./">‹ HUB</a></p>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* QUICK DRAW — tap the crosshair before its shrinking ring collapses.
+   Hits add time and grow the streak; misses drain it. Every hit makes
+   the next ring smaller, faster and the target tighter. Scores, plays,
+   time played and last-run time persist under a namespaced key that the
+   hub and the records dashboard read. */
+
+const KEY = 'quick-draw-v1';
+const stage     = document.getElementById('stage');
+const boardWrap = document.getElementById('boardWrap');
+const fx        = document.getElementById('fx');
+const fxCtx     = fx.getContext('2d');
+const targetEl  = document.getElementById('target');
+const ringEl    = document.getElementById('ring');
+const flashEl   = document.getElementById('flash');
+const streakEl  = document.getElementById('streak');
+const scoreEl   = document.getElementById('score');
+const bestEl    = document.getElementById('bestEl');
+const timeBar   = document.getElementById('timeBar');
+
+let score = 0, best = 0, games = 0, totalTime = 0, lastPlayed = 0, sessionStart = null;
+let playing = false, targetOn = false;
+let hits = 0, streak = 0, topStreak = 0, timePool = 10;
+let tx = 0, ty = 0, r = 34, shrinkT = 1.5;
+let spawnT = null, tickT = null, sound = true;
+const particles = [];
+
+function loadStats(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY) || '{}');
+    best = d.best || 0; games = d.games || 0;
+    totalTime = d.time || 0; lastPlayed = d.last || 0;
+  }catch(e){}
+}
+function saveStats(){
+  try{ localStorage.setItem(KEY,
+    JSON.stringify({ best, games, time: totalTime, last: lastPlayed })); }catch(e){}
+}
+function stopSession(){
+  if(sessionStart){
+    totalTime += Math.round((Date.now() - sessionStart) / 1000);
+    sessionStart = null;
+  }
+}
+
+/* ---------------- audio (tiny synth, no assets) ---------------- */
+let AC = null, master = null;
+function ac(){
+  if(!AC){
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain();
+    master.gain.value = 1.5;
+    master.connect(AC.destination);
+  }
+  if(AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(f, dur, type, vol, when){
+  if(!sound) return;
+  try{
+    const a = ac(), t = a.currentTime + (when || 0);
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(vol || 0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(master);
+    o.start(t); o.stop(t + dur + 0.03);
+  }catch(e){}
+}
+const sHit  = n => { const f = Math.min(340 + n * 42, 1200);
+                     tone(f, 0.11, 'triangle', 0.22); tone(f * 1.5, 0.09, 'sine', 0.1, 0.04); };
+const sMiss = () => tone(130, 0.16, 'sawtooth', 0.16);
+const sTick = () => tone(820, 0.03, 'square', 0.045);
+const sOver = () => [392, 311, 233, 174].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.12, i * 0.16));
+
+const SND_ON  = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 9.5a3.6 3.6 0 0 1 0 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M18.5 7.5a6.4 6.4 0 0 1 0 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+const SND_OFF = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><line x1="16" y1="9" x2="21" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="9" x2="16" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function paintSound(){
+  document.getElementById('soundBtn').innerHTML = sound ? SND_ON : SND_OFF;
+}
+
+/* ---------------- spawning & difficulty ---------------- */
+function shrinkFor(){ return Math.max(0.5, 1.5 - hits * 0.05); }
+function radiusFor(){ return Math.max(20, 34 - hits * 0.6); }
+
+function spawn(){
+  shrinkT = shrinkFor();
+  r = radiusFor();
+  const rect = boardWrap.getBoundingClientRect();
+  const m = r + 24;
+  let x = rect.width / 2, y = rect.height / 2;
+  for(let i = 0; i < 12; i++){
+    x = m + Math.random() * Math.max(10, rect.width  - m * 2);
+    y = m + Math.random() * Math.max(10, rect.height - m * 2);
+    if(!targetOn || Math.hypot(x - tx, y - ty) > r * 2 + 70) break;
+  }
+  tx = x; ty = y;
+  targetEl.style.left = x + 'px';
+  targetEl.style.top  = y + 'px';
+  targetEl.style.width = targetEl.style.height = (r * 2) + 'px';
+  const svg = targetEl.querySelector('svg');
+  svg.classList.remove('pop'); void svg.offsetWidth; svg.classList.add('pop');
+  targetEl.style.display = 'block';
+  targetOn = true;
+
+  ringEl.style.transition = 'none';
+  ringEl.style.transform = 'scale(1)';
+  void ringEl.offsetWidth;
+  ringEl.style.transition = 'transform ' + shrinkT.toFixed(2) + 's linear';
+  ringEl.style.transform = 'scale(0.02)';
+
+  clearTimeout(spawnT);
+  spawnT = setTimeout(() => { if(playing && targetOn) miss(); }, shrinkT * 1000 + 60);
+}
+
+function hit(){
+  clearTimeout(spawnT);
+  targetOn = false;
+  targetEl.style.display = 'none';
+  hits++; streak++;
+  if(streak > topStreak) topStreak = streak;
+  timePool += 1.2;
+  const pts = 10 + streak;
+  score += pts;
+  scoreEl.textContent = score;
+  bestEl.textContent = 'BEST ' + Math.max(best, score);
+  flyText(tx, ty - r - 6, '+' + pts, '#fde047');
+  hitRing(tx, ty);
+  burst(tx, ty, '#f87171', 12);
+  if(streak >= 2){
+    streakEl.textContent = '×' + streak + ' STREAK';
+    streakEl.classList.remove('show'); void streakEl.offsetWidth; streakEl.classList.add('show');
+  }
+  sHit(streak);
+  spawnT = setTimeout(spawn, 140);
+}
+
+function miss(){
+  clearTimeout(spawnT);
+  targetOn = false;
+  targetEl.style.display = 'none';
+  streak = 0;
+  streakEl.classList.remove('show');
+  timePool = Math.max(0, timePool - 1.5);
+  flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+  stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+  sMiss();
+  if(timePool <= 0){ timeBar.style.width = '0%'; endGame(); return; }
+  spawnT = setTimeout(spawn, 260);
+}
+
+function endGame(){
+  playing = false;
+  clearTimeout(spawnT); clearTimeout(tickT);
+  targetOn = false;
+  targetEl.style.display = 'none';
+  stopSession();
+  games++; lastPlayed = Date.now();
+  const isBest = score > best;
+  if(isBest) best = score;
+  saveStats();
+  sOver();
+  document.getElementById('sScore').textContent  = score;
+  document.getElementById('sBest').textContent   = best;
+  document.getElementById('sStreak').textContent = topStreak;
+  document.getElementById('newBest').style.display = isBest ? 'block' : 'none';
+  setTimeout(() => document.getElementById('over').classList.add('open'), 500);
+}
+
+function resetGame(){
+  stopSession();
+  sessionStart = Date.now();
+  score = 0; hits = 0; streak = 0; topStreak = 0; timePool = 10;
+  scoreEl.textContent = '0';
+  bestEl.textContent = 'BEST ' + best;
+  streakEl.classList.remove('show');
+  document.getElementById('over').classList.remove('open');
+  document.getElementById('start').classList.remove('open');
+  playing = true;
+  spawn();
+  scheduleTick();
+}
+
+/* ---------------- metronome (escalating tempo) ---------------- */
+function scheduleTick(){
+  clearTimeout(tickT);
+  if(!playing) return;
+  sTick();
+  tickT = setTimeout(scheduleTick, Math.max(140, 500 - hits * 30));
+}
+
+/* ---------------- juice ---------------- */
+function flyText(x, y, txt, color){
+  const el = document.createElement('div');
+  el.className = 'fly';
+  el.textContent = txt;
+  el.style.color = color;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  el.style.transform = 'translateX(-50%)';
+  el.style.fontSize = '18px';
+  boardWrap.appendChild(el);
+  setTimeout(() => el.remove(), 850);
+}
+function hitRing(x, y){
+  const el = document.createElement('div');
+  el.className = 'hitRing';
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  boardWrap.appendChild(el);
+  setTimeout(() => el.remove(), 500);
+}
+function burst(x, y, color, n){
+  for(let i = 0; i < n; i++){
+    const a = Math.random() * Math.PI * 2, sp = 60 + Math.random() * 170;
+    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 70,
+                     life: 0.5 + Math.random() * 0.3, t: 0,
+                     size: 2 + Math.random() * 3, color });
+  }
+}
+function sizeFx(){
+  const rect = boardWrap.getBoundingClientRect();
+  fx.width = rect.width; fx.height = rect.height;
+}
+
+/* ---------------- main loop ---------------- */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if(playing){
+    timePool -= dt;
+    if(timePool <= 0){
+      timePool = 0;
+      timeBar.style.width = '0%';
+      endGame();
+    }else{
+      timeBar.style.width = Math.min(100, timePool / 12 * 100) + '%';
+      timeBar.classList.toggle('low', timePool < 3);
+    }
+  }
+  fxCtx.clearRect(0, 0, fx.width, fx.height);
+  for(let i = particles.length - 1; i >= 0; i--){
+    const p = particles[i];
+    p.t += dt;
+    if(p.t >= p.life){ particles.splice(i, 1); continue; }
+    p.vy += 380 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    fxCtx.globalAlpha = 1 - p.t / p.life;
+    fxCtx.fillStyle = p.color;
+    fxCtx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  fxCtx.globalAlpha = 1;
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- input & wiring ---------------- */
+boardWrap.addEventListener('pointerdown', e => {
+  ac();
+  if(!playing) return;
+  const rect = boardWrap.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  if(targetOn && Math.hypot(x - tx, y - ty) <= r + 12) hit();
+  else miss();
+});
+document.getElementById('playBtn').addEventListener('click', () => { ac(); resetGame(); });
+document.getElementById('againBtn').addEventListener('click', resetGame);
+document.getElementById('soundBtn').addEventListener('click', () => {
+  sound = !sound;
+  try{ localStorage.setItem('hub-v1', JSON.stringify({ sound })); }catch(e){}
+  paintSound();
+});
+window.addEventListener('pointerdown', () => { if(sound) ac(); }, { passive: true });
+window.addEventListener('resize', sizeFx);
+window.addEventListener('pagehide', () => { stopSession(); saveStats(); });
+
+/* ---------------- boot ---------------- */
+loadStats();
+try{ sound = JSON.parse(localStorage.getItem('hub-v1') || '{}').sound !== false; }catch(e){}
+bestEl.textContent = 'BEST ' + best;
+paintSound();
+sizeFx();
+requestAnimationFrame(frame);
+</script>
 </body>
 </html>
