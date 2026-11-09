@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0b0f14">
 <title>MERGE DROP — a minimalist merge puzzle</title>
 <style>
   /* ============ THEME ============ */
@@ -19,6 +22,7 @@
     font-family:ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
     display:flex; align-items:center; justify-content:center;
     height:100dvh; overflow:hidden; touch-action:manipulation;
+    padding-bottom:env(safe-area-inset-bottom);
     user-select:none; -webkit-user-select:none;
   }
 
@@ -701,6 +705,9 @@ hideGhost();
 layout();
 renderQueue();
 updateHud();
+if('serviceWorker' in navigator && window.isSecureContext){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
 requestAnimationFrame(frame);
 </script>
 </body>
