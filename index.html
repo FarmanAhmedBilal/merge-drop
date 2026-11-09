@@ -125,6 +125,22 @@
   .btn:active{ transform:translateY(1px); }
   .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:transparent;
                 box-shadow:0 6px 22px rgba(45,212,191,.35); }
+  .card a{ color:var(--accent); text-decoration:none; }
+  .recentRow{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin:0 0 14px; }
+  .chip{ background:var(--surface2); border:1px solid var(--line); border-radius:99px;
+         padding:5px 12px; font-size:12px; color:#c6d2de; white-space:nowrap; }
+  .chip b{ color:var(--accent); }
+  .chip.dim{ color:var(--dim); border-style:dashed; }
+  .bests{ margin:0 0 18px; }
+  .bestRow{ display:flex; justify-content:space-between; align-items:center;
+            padding:9px 14px; background:var(--surface2); border:1px solid var(--line);
+            border-radius:10px; margin-bottom:6px; font-size:13.5px; }
+  .bestRow span{ color:#c6d2de; letter-spacing:.04em; }
+  .bestRow b{ font-variant-numeric:tabular-nums; color:var(--gold); }
+  .actionsRow{ display:flex; gap:8px; }
+  .actionsRow .btn{ flex:1; font-size:13px; padding:12px 10px; }
+  .btn.danger{ color:var(--warn); border-color:rgba(248,113,113,.4); }
+  .btn.danger:hover{ border-color:var(--warn); background:rgba(248,113,113,.08); }
   .stats{ display:flex; gap:8px; margin:0 0 20px; }
   .stat{ flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:10px 4px; }
   .stat b{ display:block; font-size:19px; font-variant-numeric:tabular-nums; }
@@ -145,6 +161,7 @@
     <div class="row2">
       <span class="lvl" id="lvl">LV 1</span>
       <span class="bar"><i id="bar"></i></span>
+      <button class="iconbtn" id="recordsBtn" title="Records">🏆</button>
       <button class="iconbtn" id="soundBtn" title="Sound (M)">🔊</button>
       <button class="iconbtn" id="resetBtn" title="Restart (R)">↻</button>
     </div>
@@ -181,6 +198,24 @@
       <li><span class="chip" style="background:#39424e; color:#9aa7b4">◆</span> Rocks can't fuse. Merging beside one shatters it. Don't let columns fill up.</li>
     </ul>
     <button class="btn primary" id="playBtn">PLAY</button>
+  </div>
+</div>
+
+<div class="overlay" id="records">
+  <div class="card">
+    <h2>RECORDS</h2>
+    <p class="sub">Everything here lives only on this device · <a href="privacy.html">Privacy</a></p>
+    <div class="stats">
+      <div class="stat"><b id="rPlays">0</b><span>PLAYS</span></div>
+      <div class="stat"><b id="rTime">0s</b><span>TIME PLAYED</span></div>
+      <div class="stat"><b id="rBest">0</b><span>BEST RUN</span></div>
+    </div>
+    <div class="recentRow" id="recentRow"></div>
+    <div class="bests" id="bests"></div>
+    <div class="actionsRow">
+      <button class="btn danger" id="clearBtn">CLEAR DATA</button>
+      <button class="btn primary" id="recordsClose">CLOSE</button>
+    </div>
   </div>
 </div>
 
@@ -230,19 +265,27 @@ let S = 56;                       // cell size in px (recomputed on resize)
 let grid, queue;                  // grid[r][c] = null | {v, el}
 let score = 0, shownScore = 0, level = 1, merges = 0;
 let busy = false, over = false, playing = false;
-let best = 0, totalGames = 0, sound = true;
+let best = 0, totalGames = 0, totalTime = 0, lastPlayed = 0, sessionStart = null, sound = true;
 const particles = [];
 
 /* ---------------- persistence ---------------- */
 function loadStats(){
   try{
     const d = JSON.parse(localStorage.getItem('merge-drop-v1') || '{}');
-    best = d.best || 0; totalGames = d.games || 0; sound = d.sound !== false;
+    best = d.best || 0; totalGames = d.games || 0;
+    totalTime = d.time || 0; lastPlayed = d.last || 0;
+    sound = d.sound !== false;
   }catch(e){}
 }
 function saveStats(){
   try{ localStorage.setItem('merge-drop-v1',
-    JSON.stringify({ best, games: totalGames, sound })); }catch(e){}
+    JSON.stringify({ best, games: totalGames, time: totalTime, last: lastPlayed, sound })); }catch(e){}
+}
+function stopSession(){
+  if(sessionStart){
+    totalTime += Math.round((Date.now() - sessionStart) / 1000);
+    sessionStart = null;
+  }
 }
 
 /* ---------------- progression math ---------------- */
@@ -587,7 +630,9 @@ function checkGameOver(){
   if(over) return;
   for(let c = 0; c < COLS; c++) if(!grid[0][c]) return;
   over = true; playing = false;
+  stopSession();
   totalGames++;
+  lastPlayed = Date.now();
   const isBest = score > best;
   if(isBest) best = score;
   saveStats();
@@ -663,10 +708,53 @@ function resetGame(){
   grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
   queue = [makeSpawn(), makeSpawn(), makeSpawn()];
   score = 0; shownScore = 0; level = 1; merges = 0;
+  stopSession();
+  sessionStart = Date.now();
   busy = false; over = false; playing = true;
   boardWrap.classList.remove('danger');
   document.getElementById('over').classList.remove('open');
   renderQueue(); updateHud(); hideGhost(); layout();
+}
+
+/* ---------------- records dashboard ---------------- */
+/* Games register here so the dashboard's totals, recent chips and
+   per-game bests stay in sync with each game's own screen. New games
+   add one entry pointing at their own storage key. */
+const GAMES = [
+  { name: 'MERGE DROP', key: 'merge-drop-v1',
+    best:  () => best,
+    plays: () => totalGames,
+    time:  () => totalTime + (sessionStart ? (Date.now() - sessionStart) / 1000 : 0),
+    last:  () => lastPlayed }
+];
+
+function fmtTime(s){
+  if(s < 60) return Math.round(s) + 's';
+  const m = Math.floor(s / 60), h = Math.floor(m / 60);
+  if(h) return h + 'h ' + (m % 60) + 'm';
+  return m + 'm ' + Math.round(s % 60) + 's';
+}
+function ago(ts){
+  const d = Date.now() - ts;
+  if(d < 60e3) return 'just now';
+  if(d < 3600e3) return Math.round(d / 60e3) + 'm ago';
+  if(d < 86400e3) return Math.round(d / 3600e3) + 'h ago';
+  return Math.round(d / 86400e3) + 'd ago';
+}
+function renderRecords(){
+  const plays = GAMES.reduce((n, g) => n + g.plays(), 0);
+  const time  = GAMES.reduce((n, g) => n + g.time(), 0);
+  const top   = GAMES.reduce((m, g) => Math.max(m, g.best()), 0);
+  document.getElementById('rPlays').textContent = plays;
+  document.getElementById('rTime').textContent  = fmtTime(time);
+  document.getElementById('rBest').textContent  = top;
+  const recent = GAMES.filter(g => g.last() > 0).sort((a, b) => b.last() - a.last());
+  document.getElementById('recentRow').innerHTML = recent.length
+    ? recent.map(g => '<span class="chip"><b>' + g.name + '</b> · ' + ago(g.last()) + '</span>').join('')
+    : '<span class="chip dim">No games played yet — start one!</span>';
+  document.getElementById('bests').innerHTML = GAMES.map(g =>
+    '<div class="bestRow"><span>' + g.name + '</span><b>' + (g.plays() > 0 ? g.best() : '—') + '</b></div>'
+  ).join('');
 }
 
 /* ---------------- wiring ---------------- */
@@ -682,6 +770,21 @@ document.getElementById('soundBtn').addEventListener('click', e => {
   e.target.textContent = sound ? '🔊' : '🔇';
   saveStats();
 });
+document.getElementById('recordsBtn').addEventListener('click', () => {
+  renderRecords();
+  document.getElementById('records').classList.add('open');
+});
+document.getElementById('recordsClose').addEventListener('click', () => {
+  document.getElementById('records').classList.remove('open');
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if(!confirm('Erase all local records and settings? This cannot be undone.')) return;
+  GAMES.forEach(g => { try{ localStorage.removeItem(g.key); }catch(e){} });
+  best = 0; totalGames = 0; totalTime = 0; lastPlayed = 0; sessionStart = null;
+  bestEl.textContent = 'BEST 0';
+  updateHud();
+  renderRecords();
+});
 window.addEventListener('keydown', e => {
   if(e.key >= '1' && e.key <= String(COLS)) drop(+e.key - 1);
   else if(e.key === 'r' || e.key === 'R'){ if(playing) resetGame(); }
@@ -693,6 +796,7 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('pointerdown', () => { if(sound) ac(); }, { passive: true }); // unlock audio on any first tap
 window.addEventListener('resize', () => { layout(); if(playing) renderQueue(); });
+window.addEventListener('pagehide', () => { stopSession(); saveStats(); });
 
 /* ---------------- boot ---------------- */
 loadStats();
