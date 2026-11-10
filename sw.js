@@ -1,5 +1,5 @@
 /* Merge Drop arcade service worker — cache-first so everything plays offline. */
-const CACHE = 'merge-drop-v3';
+const CACHE = 'merge-drop-v4';
 const ASSETS = [
   './', './index.html', './merge-drop.html',
   './neon-snake.html', './quick-draw.html', './range-zero.html', './stack-up.html',

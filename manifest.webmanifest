@@ -1,13 +1,13 @@
 {
-  "name": "Merge Drop Arcade",
-  "short_name": "Arcade",
+  "name": "Spiel-Hub",
+  "short_name": "Spiel-Hub",
   "description": "A collection of quick arcade games: puzzles, reflex challenges, stacking, and first-person shooting.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0b0f14",
-  "theme_color": "#0b0f14",
+  "background_color": "#0d1218",
+  "theme_color": "#0d1218",
   "icons": [
     {
       "src": "icon.svg",
