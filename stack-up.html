@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Stack Up — Merge Drop Arcade</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0b0f14">
+<style>
+  :root{--bg:#0b0f14;--surface:#121a23;--surface2:#1a2430;--line:#22303e;--text:#e6edf3;--dim:#8b9bab;--accent:#a78bfa;--gold:#fde047}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0}
+  body{height:100dvh;overflow:hidden;display:flex;justify-content:center;background:radial-gradient(900px 650px at 50% -10%,#252147,var(--bg));color:var(--text);font-family:ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  #app{width:min(100%,900px);height:100%;display:flex;flex-direction:column;min-height:0}
+  header{padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{font-size:12px;font-weight:900;letter-spacing:.22em;color:var(--dim)}.tools{display:flex;align-items:center;gap:8px}
+  .pill,.iconbtn,.btn{font:inherit;color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer}
+  .pill{border-radius:999px;padding:7px 12px;text-decoration:none;font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--dim)}.iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center}.iconbtn svg{width:18px;height:18px}
+  .hud{display:flex;align-items:center;justify-content:space-between;margin-top:13px;padding:10px 15px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.035)}.metric span{display:block;color:var(--dim);font-size:9px;font-weight:900;letter-spacing:.16em}.metric b{font-size:23px;font-variant-numeric:tabular-nums}.hint{font-size:11px;color:var(--dim);text-align:right}
+  #stage{position:relative;flex:1;min-height:170px;margin:12px 0 8px;border:1px solid rgba(167,139,250,.2);border-radius:18px;overflow:hidden;background:#0d0c1d;box-shadow:0 20px 60px rgba(0,0,0,.35);touch-action:manipulation}#view{width:100%;height:100%;display:block}
+  .actions{display:flex;justify-content:center;padding:0 0 6px}.btn{min-width:180px;border:0;border-radius:14px;padding:15px 24px;background:linear-gradient(135deg,#c4b5fd,#8b5cf6);color:#1b1235;font-size:14px;font-weight:950;letter-spacing:.15em;box-shadow:0 8px 26px rgba(167,139,250,.2);touch-action:manipulation}.btn:active{transform:scale(.98)}
+  footer{text-align:center;color:var(--dim);font-size:10px;padding:3px 0 8px}
+  .overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,5,12,.78);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s}.overlay.open{opacity:1;pointer-events:auto}.card{width:min(100%,360px);max-height:calc(100dvh - 36px);overflow:auto;text-align:center;padding:26px;background:var(--surface);border:1px solid #393352;border-radius:22px;box-shadow:0 28px 90px rgba(0,0,0,.55)}.eyebrow{font-size:10px;font-weight:900;letter-spacing:.24em;color:var(--accent)}.card h1,.card h2{margin:8px 0;font-size:clamp(27px,7vw,36px);letter-spacing:.09em}.card p{color:var(--dim);font-size:14px;line-height:1.5;margin:8px 0 20px}.card .btn{width:100%}.secondary{display:inline-block;margin:14px 0 0;color:var(--dim);font-size:11px;font-weight:900;letter-spacing:.12em;text-decoration:none}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 20px}.stats div{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px}.stats b{display:block;font-size:21px}.stats span{font-size:9px;letter-spacing:.14em;color:var(--dim)}#newBest{display:none;color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.17em}
+  @media(max-width:520px){body{padding-left:9px;padding-right:9px}.hud{padding:8px 11px}.metric b{font-size:20px}.brand{font-size:10px;letter-spacing:.16em}}
+  @media(orientation:landscape) and (max-height:520px){header{padding-top:4px}.hud{margin-top:6px;padding:5px 10px}#stage{margin:6px 0;min-height:120px}.btn{padding:10px 22px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><span class="brand">STACK UP · ONE BUTTON</span><div class="tools"><a class="pill" href="index.html" aria-label="Back to arcade hub">‹ HUB</a><button class="iconbtn" id="soundBtn" aria-label="Toggle sound" title="Toggle sound"></button></div></header>
+  <div class="hud"><div class="metric"><span>HEIGHT</span><b id="score">0</b></div><div class="hint">BEST <strong id="best">0</strong><br>PERFECT <strong id="perfect">0</strong></div></div>
+  <main id="stage" aria-label="Stacking tower game"><canvas id="view"></canvas></main>
+  <div class="actions"><button class="btn" id="dropBtn">DROP BLOCK</button></div>
+  <footer>Tap anywhere or press SPACE · land close to keep your tower wide</footer>
+</div>
+<div class="overlay open" id="start"><section class="card"><div class="eyebrow">PRECISION STACKER</div><h1>STACK UP</h1><p>Time each drop to build a taller tower. Every overhang is trimmed away — miss the platform and the run is over.</p><button class="btn" id="playBtn">START STACKING</button><a class="secondary" href="index.html">‹ BACK TO HUB</a></section></div>
+<div class="overlay" id="over"><section class="card"><div class="eyebrow">TOWER COMPLETE</div><h2>ONE MORE BLOCK?</h2><p id="newBest">NEW PERSONAL BEST</p><div class="stats"><div><b id="endScore">0</b><span>HEIGHT</span></div><div><b id="endBest">0</b><span>BEST</span></div><div><b id="endPerfect">0</b><span>PERFECTS</span></div><div><b id="endWidth">100%</b><span>PLATFORM LEFT</span></div></div><button class="btn" id="againBtn">BUILD AGAIN</button><a class="secondary" href="index.html">‹ BACK TO HUB</a><div id="adSlot"></div></section></div>
+<script>
+'use strict';
+const KEY='stack-up-v1',canvas=document.getElementById('view'),ctx=canvas.getContext('2d'),stage=document.getElementById('stage');
+let W=1,H=1,dpr=1,blocks=[],moving=null,score=0,best=0,games=0,totalTime=0,lastPlayed=0,sessionStart=0,playing=false,sound=true,perfect=0,direction=1,speed=150,clock=0,particles=[],AC=null,last=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');best=d.best||0;games=d.games||0;totalTime=d.time||0;lastPlayed=d.last||0}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({best,games,time:totalTime,last:lastPlayed}))}catch(e){}}
+function stopSession(){if(sessionStart){totalTime+=Math.round((Date.now()-sessionStart)/1000);sessionStart=0}}
+function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=Math.max(1,r.width);H=Math.max(1,r.height);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+function audio(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function tone(f,d,t='triangle',v=.1){if(!sound)return;const a=audio();if(!a)return;try{const o=a.createOscillator(),g=a.createGain();o.type=t;o.frequency.setValueAtTime(f,a.currentTime);g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d)}catch(e){}}
+function paintSound(){document.getElementById('soundBtn').innerHTML=sound?'<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>':'<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="m16 9 5 6m0-6-5 6" stroke="currentColor" stroke-width="2"/></svg>'}
+function start(){blocks=[{x:W*.25,w:W*.5,color:0}];score=0;perfect=0;speed=155;direction=1;particles=[];moving=null;playing=true;sessionStart=Date.now();document.getElementById('start').classList.remove('open');document.getElementById('over').classList.remove('open');spawn();updateHud()}
+function spawn(){const prev=blocks[blocks.length-1],w=prev.w;moving={x:direction>0?-w:W, w, y:blocks.length, color:blocks.length};direction=direction>0?1:-1}
+function updateHud(){document.getElementById('score').textContent=score;document.getElementById('best').textContent=Math.max(best,score);document.getElementById('perfect').textContent=perfect}
+function burst(x,y){for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,s=35+Math.random()*140;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.35+Math.random()*.3,t:0})}}
+function place(){if(!playing||!moving)return;const prev=blocks[blocks.length-1],left=Math.max(prev.x,moving.x),right=Math.min(prev.x+prev.w,moving.x+moving.w),overlap=right-left;if(overlap<Math.max(5,W*.008)){finish();return}const diff=Math.abs((prev.x+prev.w/2)-(moving.x+moving.w/2));if(diff<Math.max(7,prev.w*.055)){perfect++;moving.x=prev.x;moving.w=prev.w;burst(W/2,H*.48);tone(720+Math.min(perfect,8)*38,.13,'sine',.13)}else{moving.x=left;moving.w=overlap;tone(310+Math.min(score,20)*10,.1,'triangle',.09)}blocks.push({x:moving.x,w:moving.w,color:moving.color});moving=null;score++;speed=Math.min(430,155+score*8);updateHud();spawn()}
+function finish(){if(!playing)return;playing=false;stopSession();games++;lastPlayed=Date.now();const isBest=score>best;if(isBest)best=score;save();document.getElementById('endScore').textContent=score;document.getElementById('endBest').textContent=best;document.getElementById('endPerfect').textContent=perfect;document.getElementById('endWidth').textContent=Math.round((blocks[blocks.length-1]?.w||0)/(W*.5)*100)+'%';document.getElementById('newBest').style.display=isBest?'block':'none';document.getElementById('over').classList.add('open');tone(130,.3,'sawtooth',.1)}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function drawBlock(x,y,w,h,index,alpha=1){const hue=(258+index*19)%360;ctx.globalAlpha=alpha;ctx.shadowColor='hsla('+hue+',90%,70%,.35)';ctx.shadowBlur=14;ctx.fillStyle='hsl('+hue+' 74% 62%)';roundRect(x,y,w,h,5);ctx.shadowBlur=0;ctx.fillStyle='rgba(255,255,255,.19)';ctx.fillRect(x+3,y+3,Math.max(0,w-6),3);ctx.globalAlpha=1}
+function draw(){ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#17152b');bg.addColorStop(1,'#090a14');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(167,139,250,.07)';for(let x=0;x<W;x+=38){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=38){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ const bh=22,baseY=H-48,camera=Math.max(0,blocks.length*bh-H*.47);blocks.forEach((b,i)=>{const y=baseY-(i+1)*bh+camera;drawBlock(b.x,y,b.w,bh-2,i)});if(moving){const y=baseY-(moving.y+1)*bh+camera;drawBlock(moving.x,y,moving.w,bh-2,moving.color,.97);if(moving.x<0||moving.x+moving.w>W){ctx.globalAlpha=.25;ctx.fillStyle='#fb7185';if(moving.x<0)ctx.fillRect(0,y,Math.min(-moving.x,W),bh);if(moving.x+moving.w>W)ctx.fillRect(Math.max(0,W-moving.x),y,Math.max(0,moving.x+moving.w-W),bh);ctx.globalAlpha=1}}
+ const base=blocks[0];ctx.fillStyle='#27243e';ctx.beginPath();ctx.moveTo(base.x-18,H);ctx.lineTo(base.x,H-48);ctx.lineTo(base.x+base.w,H-48);ctx.lineTo(base.x+base.w+18,H);ctx.fill();ctx.strokeStyle='rgba(196,181,253,.35)';ctx.stroke();particles.forEach(p=>{ctx.globalAlpha=1-p.t/p.life;ctx.fillStyle='#fde047';ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill()});ctx.globalAlpha=1}
+function frame(now){const dt=Math.min(.05,(now-(last||now))/1000);last=now;clock+=dt;if(playing&&moving){moving.x+=direction*speed*dt;if(moving.x+moving.w>W){moving.x=W-moving.w;direction=-1}else if(moving.x<0){moving.x=0;direction=1}}for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;if(p.t>=p.life)particles.splice(i,1)}draw();requestAnimationFrame(frame)}
+function action(e){if(e)e.preventDefault();if(playing)place()}
+document.getElementById('playBtn').addEventListener('click',()=>{audio();start()});document.getElementById('againBtn').addEventListener('click',()=>{audio();start()});document.getElementById('dropBtn').addEventListener('click',action);stage.addEventListener('pointerdown',action);window.addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='ArrowDown'){e.preventDefault();action(e)}});document.getElementById('soundBtn').addEventListener('click',()=>{sound=!sound;try{localStorage.setItem('hub-v1',JSON.stringify({sound}))}catch(e){}paintSound()});window.addEventListener('resize',resize);window.addEventListener('pagehide',()=>{stopSession();save()});window.addEventListener('pointerdown',()=>{if(sound)audio()},{passive:true});
+load();try{sound=JSON.parse(localStorage.getItem('hub-v1')||'{}').sound!==false}catch(e){}paintSound();resize();blocks=[{x:W*.25,w:W*.5,color:0}];updateHud();requestAnimationFrame(frame);if('serviceWorker'in navigator&&window.isSecureContext)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+<script src="ads.js" data-context="game"></script>
+</body>
+</html>

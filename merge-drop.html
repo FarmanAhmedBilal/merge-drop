@@ -163,7 +163,7 @@
       <span class="best" id="best">BEST 0</span>
     </div>
     <div class="row2">
-      <a class="hubbtn" href="./" title="Back to the hub">‹ HUB</a>
+      <a class="hubbtn" href="index.html" title="Back to the hub">‹ HUB</a>
       <span class="lvl" id="lvl">LV 1</span>
       <span class="bar"><i id="bar"></i></span>
       <button class="iconbtn" id="recordsBtn" title="Records">🏆</button>
@@ -203,6 +203,7 @@
       <li><span class="chip" style="background:#39424e; color:#9aa7b4">◆</span> Rocks can't fuse. Merging beside one shatters it. Don't let columns fill up.</li>
     </ul>
     <button class="btn primary" id="playBtn">PLAY</button>
+    <p style="margin:14px 0 0"><a class="btn" href="index.html">‹ BACK TO HUB</a></p>
   </div>
 </div>
 
@@ -221,6 +222,7 @@
       <button class="btn danger" id="clearBtn">CLEAR DATA</button>
       <button class="btn primary" id="recordsClose">CLOSE</button>
     </div>
+    <p style="margin:12px 0 0"><a class="btn" href="index.html">‹ BACK TO HUB</a></p>
   </div>
 </div>
 
@@ -234,10 +236,12 @@
       <div class="stat"><b id="sMerges">0</b><span>FUSIONS</span></div>
     </div>
     <button class="btn primary" id="againBtn">ONE MORE RUN</button>
+    <p style="margin:14px 0 0"><a class="btn" href="index.html">‹ BACK TO HUB</a></p>
     <div id="adSlot"></div>
   </div>
 </div>
 
+<script src="games.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -739,15 +743,13 @@ function gameEntry(name, key){
     last:  () => readD(key).last  || 0
   };
 }
-const GAMES = [
-  { name: 'MERGE DROP', key: 'merge-drop-v1',
-    best:  () => best,
-    plays: () => totalGames,
-    time:  () => totalTime + (sessionStart ? (Date.now() - sessionStart) / 1000 : 0),
-    last:  () => lastPlayed },
-  gameEntry('NEON SNAKE', 'neon-snake-v1'),
-  gameEntry('QUICK DRAW', 'quick-draw-v1')
-];
+const GAMES = window.ARCADE_GAMES.map(g => g.key === 'merge-drop-v1'
+  ? { name: g.name, key: g.key,
+      best:  () => best,
+      plays: () => totalGames,
+      time:  () => totalTime + (sessionStart ? (Date.now() - sessionStart) / 1000 : 0),
+      last:  () => lastPlayed }
+  : gameEntry(g.name, g.key));
 
 function fmtTime(s){
   if(s < 60) return Math.round(s) + 's';

@@ -90,7 +90,7 @@
     else renderHouse(cfg && cfg.house && cfg.house[ctx]);
   }).catch(function(){
     renderHouse(ctx === 'hub'
-      ? { text: 'SPONSOR SLOT OPEN', sub: 'Your brand here — one slim banner on every run.' }
-      : { text: 'PLAYED ONE? PLAY ALL THREE', sub: 'Merge Drop · Neon Snake · Quick Draw', url: './' });
+      ? { text: 'SPONSOR SLOT OPEN', sub: 'Your brand here — one slim banner across the arcade.' }
+      : { text: 'PLAYED ONE? PLAY THEM ALL', sub: 'Quick games for every kind of run', url: './' });
   });
 })();
